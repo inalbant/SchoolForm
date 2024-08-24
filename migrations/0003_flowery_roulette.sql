@@ -1,0 +1,1 @@
+CREATE INDEX `user_email_idx` ON `schoolform_user` (`email`);

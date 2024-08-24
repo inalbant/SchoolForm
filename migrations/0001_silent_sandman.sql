@@ -1,0 +1,1 @@
+ALTER TABLE `schoolform_user` ADD `hashed_password` text;
