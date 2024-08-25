@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').trim(),
   password: z.string().min(3, 'Password must be at least 3 characters'),
   // .min(8, { message: "Be at least 8 characters long" })
   //   .regex(/[a-zA-Z]/, { message: "Contain at least one letter." })
@@ -24,3 +24,7 @@ export const signupSchema = loginSchema
 // Infer the types from the schemas
 export type LoginForm = z.infer<typeof loginSchema>;
 export type SignupForm = z.infer<typeof signupSchema>;
+
+export const newPasswordSchema = z.object({
+  newPassword: loginSchema.shape.password,
+});

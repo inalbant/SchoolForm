@@ -2,7 +2,12 @@ import { Authenticator, AuthorizationError } from 'remix-auth';
 import { FormStrategy } from 'remix-auth-form';
 import { hash, verify } from '@node-rs/argon2';
 import { eq } from 'drizzle-orm';
-import { type SelectUser, users, verifyEmailTokens } from 'db/schema';
+import {
+  passwordResetTokens,
+  type SelectUser,
+  users,
+  verifyEmailTokens,
+} from 'db/schema';
 import { db } from 'db';
 import { sessionStorage } from '~/services/session.server';
 import {
@@ -15,6 +20,7 @@ import type { AppLoadContext } from '@remix-run/node';
 import { generateRandomToken } from '~/lib/utils';
 import { sendEmail } from '~/lib/email';
 import { VerifyEmail } from '~/emails/verify-email';
+import { ResetPasswordEmail } from '~/emails/password-reset-email';
 
 export const authenticator = new Authenticator<
   Omit<SelectUser, 'passwordHash'>
@@ -100,7 +106,7 @@ async function createEmailVerificationToken(userId: number) {
       tokenExpiresAt,
     })
     .onConflictDoUpdate({
-      target: verifyEmailTokens.id,
+      target: verifyEmailTokens.userId,
       set: {
         token,
         tokenExpiresAt,
@@ -133,4 +139,66 @@ export async function verifyEmailToken(token: string) {
   await db.delete(verifyEmailTokens).where(eq(verifyEmailTokens.token, token));
 
   return user;
+}
+
+export async function sendPasswordResetEmail(email: string) {
+  const [user] = await db.select().from(users).where(eq(users.email, email));
+
+  if (!user) return;
+
+  const token = await generateRandomToken(TOKEN_LENGTH);
+  const tokenExpiresAt = new Date(Date.now() + TOKEN_TTL);
+
+  await db
+    .insert(passwordResetTokens)
+    .values({
+      userId: user.id,
+      token,
+      tokenExpiresAt,
+    })
+    .onConflictDoUpdate({
+      target: passwordResetTokens.userId,
+      set: {
+        token,
+        tokenExpiresAt,
+      },
+    });
+
+  await sendEmail(
+    email,
+    `Reset your password for ${APP_NAME}`,
+    <ResetPasswordEmail token={token} />
+  );
+}
+
+export async function verifyPasswordResetToken(token: string) {
+  const existingToken = await db.query.passwordResetTokens.findFirst({
+    where: eq(passwordResetTokens.token, token),
+  });
+
+  const currentTime = Date.now();
+
+  if (!existingToken || Number(existingToken.tokenExpiresAt) < currentTime)
+    throw new Error('Invalid token or token timed out');
+
+  return existingToken;
+}
+
+export async function changeUserPassword(
+  newPassword: string,
+  userId: number,
+  token: string
+) {
+  const passwordHash = await hash(newPassword, argon2Config);
+
+  await db
+    .update(users)
+    .set({
+      passwordHash,
+    })
+    .where(eq(users.id, userId));
+
+  await db
+    .delete(passwordResetTokens)
+    .where(eq(passwordResetTokens.token, token));
 }

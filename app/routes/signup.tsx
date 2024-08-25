@@ -56,7 +56,6 @@ export async function action({
   request,
 }: ActionFunctionArgs): Promise<Response | ActionData> {
   const form = await request.clone().formData();
-  //const form = await request.formData();
 
   const result = signupSchema.safeParse({
     email: form.get('email'),

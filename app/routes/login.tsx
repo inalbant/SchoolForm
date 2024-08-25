@@ -3,32 +3,38 @@ import {
   type LoaderFunctionArgs,
   json,
 } from '@remix-run/node';
-import { Form, useActionData } from '@remix-run/react';
+import { Form, Link, useActionData, useNavigation } from '@remix-run/react';
 import { AuthorizationError } from 'remix-auth';
 import { loginSchema } from '~/schemas/authForm';
 import { authenticator } from '~/services/auth.server';
 
 export default function LoginPage() {
+  const navigation = useNavigation();
   const actionData = useActionData<typeof action>();
 
-  console.log('*** actionData is: ', actionData);
-
   return (
-    <Form method="post">
-      <label htmlFor="email">Email</label>
-      <input id="email" type="email" name="email" required />
-      {actionData?.errors?.email && <p>{actionData.errors.email[0]}</p>}
-      <label htmlFor="password">Password</label>
-      <input
-        type="password"
-        name="password"
-        autoComplete="current-password"
-        required
-      />
-      {actionData?.errors?.password && <p>{actionData.errors.password[0]}</p>}
-      <button>Sign In</button>
-      {actionData?.errors && <p>{actionData.errors}</p>}
-    </Form>
+    <>
+      <Form method="post">
+        <fieldset disabled={navigation.state === 'submitting'}>
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" name="email" required />
+          {actionData?.errors?.email && <p>{actionData.errors.email[0]}</p>}
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            required
+          />
+          {actionData?.errors?.password && (
+            <p>{actionData.errors.password[0]}</p>
+          )}
+          <button>Sign In</button>
+          {actionData?.errors && <p>{actionData.errors}</p>}
+        </fieldset>
+      </Form>
+      <Link to="/forgot-password">Forgot Password?</Link>
+    </>
   );
 }
 

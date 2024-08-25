@@ -1,6 +1,34 @@
-# Welcome to Remix!
+# SchoolForm
 
-- 📖 [Remix docs](https://remix.run/docs)
+The modern web app for schools of all types to manage their students.
+The tech stack is:
+
+- TypeScript
+- React, Remix, Vite
+- Tailwind CSS
+- Drizzle ORM
+- Turso DB
+- Resend Email
+- Stripe
+
+## Features
+Completed:
+
+- User registration flow using email and password
+- Sending and verifying emails
+- User login
+- Password reset
+
+To do:
+
+- Landing page
+- Rate limiting
+- User profiles
+- Authorization
+- Dashboard
+- Invite users
+- Db tables for schools, students, admins, and staff
+- Payment
 
 ## Development
 
@@ -34,7 +62,3 @@ Make sure to deploy the output of `npm run build`
 
 - `build/server`
 - `build/client`
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever css framework you prefer. See the [Vite docs on css](https://vitejs.dev/guide/features.html#css) for more information.
